@@ -12,10 +12,14 @@ void console(const LOGT lt, const LOGL ll, char const*const le, va_list ap)
 
 int main(void)
 {
+	pthread_t acceptclients=0;
 	(void)Log_subscribe(&console);
-	AcceptClients();
+	acceptclients=AcceptClients();
 
-	getchar();
+	void*retval;
+
+	pthread_join(&acceptclients,&retval);
+	
 
 	return EXIT_SUCCESS;
 }

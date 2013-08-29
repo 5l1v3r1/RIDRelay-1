@@ -7,7 +7,7 @@
 struct link
 {
 	const int relay_sockfd;
-	struct sockaddr const*const server_addr;
+	struct sockaddr_in const*const server_addr;
 };
 
 static void*socklisten(void*connection)
@@ -61,7 +61,7 @@ static void*socklisten(void*connection)
 	}
 }
 
-int AcceptClients(void)
+pthread_t AcceptClients(void)
 {
 	pthread_t netthread;
 	int relay_sockfd;
@@ -72,7 +72,7 @@ int AcceptClients(void)
 	}
 	// continue
 	{
-		const struct sockaddr_in relay_address=
+		struct sockaddr_in relay_address=
 		{
 			.sin_family=AF_INET,
 			.sin_port = htons((uint16_t)iniparser_getint(config,"network:port",61014)),
@@ -84,7 +84,15 @@ int AcceptClients(void)
 			.sin_port = htons((uint16_t)iniparser_getint(config,"server:port",61014)),
 			.sin_addr.s_addr = inet_addr(iniparser_getstring(config,"server:address","127.1")),
 			.sin_zero={0},
-		};
+		},*ptservaddr=malloc(sizeof*ptservaddr);
+
+		if(ptservaddr==NULL)
+		{
+			Log(LOGT_NETWORK,LOGL_ERROR,"Out of memory!");
+			goto die;
+		}
+
+		memcpy(ptservaddr,&server_address,sizeof*ptservaddr);
 
 		// specify and grab a socket we want
 		relay_sockfd = socket(AF_INET,SOCK_STREAM,0);
@@ -155,7 +163,7 @@ int AcceptClients(void)
 			struct link tlink=
 			{
 				.relay_sockfd=relay_sockfd,
-				.server_addr=(struct sockaddr*)&server_address,
+				.server_addr=ptservaddr,
 			},*ptlink=malloc(sizeof*ptlink);
 
 			if(ptlink==NULL)
@@ -171,9 +179,9 @@ int AcceptClients(void)
 	}
 
 	iniparser_freedict(config);
-	return EXIT_SUCCESS;
+	return netthread;
 	die:
 	iniparser_freedict(config);
-	return EXIT_FAILURE;
+	return 0;
 }
 

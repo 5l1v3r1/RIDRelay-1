@@ -28,6 +28,7 @@ typedef enum
 {
 	LOGT_UNDEFINED,
 	LOGT_NETWORK,
+	LOGT_TUNNEL,
 } LOGT;
 
 extern void Log(const LOGT,const LOGL,char const*const, ...);

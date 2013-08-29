@@ -25,7 +25,8 @@
 #include "Tunnel.h"
 #include "../Util/Path.h"
 #include "../deps/iniparser/src/iniparser.h"
+#include <pthread.h>
 
-int AcceptClients(void);
+pthread_t AcceptClients(void);
 
 #endif
