@@ -27,6 +27,8 @@ static void*socklisten(void*connection)
 			int client_sockfd;
 			Tunnel*t;
 
+			Log(LOGT_NETWORK,LOGL_NOTICE,"Relay is now accepting connections");
+
 			if((client_sockfd = accept(tlink->relay_sockfd,&client_address,&endpoint_len)) < 1 )
 			{
 				switch(errno)

@@ -21,6 +21,7 @@ typedef enum opcode
 	OPC_GRAPH,
 	OPC_ALARM,
 	OPC_BOUNDS,
+	OPC_VALUE,
 } opcode;
 
 typedef enum{unit_undefined,unit_temperature,unit_flow,unit_pressure,unit_fullness,unit_radiation} unittype;
@@ -30,18 +31,32 @@ typedef struct
 	opcode op;
 } Packet;
 
-typedef Packet iPacket;
+typedef Packet scPacket;
+typedef Packet csPacket;
 
-struct LoginPacket
+struct csPing{csPacket base;};
+struct scPing{scPacket base;};
+
+struct csUpdate{csPacket base;};
+
+struct scUpdate
 {
-	Packet base;
-	int zero;
+	scPacket base;
+	unittype type;
+	unsigned int sensorcount;
+	int*sensors;
 };
 
-struct iGraph
+struct csGraph
 {
-	iPacket base;
+	csPacket base;
+	unsigned int namelen;
 	char*name;
+};
+
+struct scGraph
+{
+	scPacket base;
 };
 
 struct iBounds
@@ -59,21 +74,15 @@ struct Update
 	int*sensors;
 };
 
-struct serverGraph
-{
-};
+extern void readcsPing(const int, const int);
+extern void readcsUpdate(const int, const int);
+extern void readcsGraph(const int, const int);
 
-ssize_t writeUpdate(const int, struct Update*);
-ssize_t writeGraph(const int,struct serverGraph*);
-ssize_t writeLogin(const int,struct LoginPacket*);
+extern void readscLogin(const int, const int);
+extern void readscPing(const int, const int);
+extern void readscUpdate(const int,const int);
+extern void readscGraph(const int, const int);
 
-struct iGraph*readGraph(const int);
-struct iBounds*readBounds(const int);
-struct Update*readUpdate(const int);
 
-void destroyiGraph(struct iGraph*);
-void destroyoGraph(struct serverGraph*);
-void destroyiBounds(struct iBounds*);
-void destroyUpdate(struct Update*);
-void destroyLogin(struct LoginPacket*);
 #endif
+

@@ -3,6 +3,7 @@
 #include <errno.h>
 #include <string.h>
 #include "../Diagnostic/Log.h"
+#include "Packet.h"
 
 #include <unistd.h>
 
@@ -15,6 +16,7 @@ static void*_iLoop(void*rawtunnel)
 	else
 	{
 		Tunnel*tunnel=rawtunnel;
+		bool speakprotocol=true;
 		while(true)
 		{
 			unsigned char byte=0;
@@ -25,11 +27,35 @@ static void*_iLoop(void*rawtunnel)
 			}
 			else
 			{
-				Log(LOGT_TUNNEL,LOGL_DUMP,"--> 0x%02x",byte);
 				if(write(tunnel->server,&byte,1)!=1)
 				{
 					Log(LOGT_TUNNEL,LOGL_WARNING,"Cannot send to server!");
 					goto die;
+				}
+				if(!speakprotocol)
+				{
+					Log(LOGT_TUNNEL,LOGL_DUMP,"--> 0x%02x",byte);
+				}
+				else
+				{
+					opcode op=byte;
+					switch(op)
+					{
+						case OPC_PING:
+							readcsPing(tunnel->client,tunnel->server);
+							break;
+						case OPC_UPDATE:
+							readcsUpdate(tunnel->client,tunnel->server);
+							break;
+						case OPC_GRAPH:
+							readcsGraph(tunnel->client,tunnel->server);
+							break;
+						default:
+							Log(LOGT_TUNNEL,LOGL_WARNING,"Unsupported packet received");
+							Log(LOGT_TUNNEL,LOGL_RESULT,"\n;; Client goes unparsed from here ;;\n> 0x%02x",byte);
+							speakprotocol=false;
+							break;
+					}
 				}
 			}
 		}
@@ -48,6 +74,7 @@ static void*_oLoop(void*rawtunnel)
 	else
 	{
 		Tunnel*tunnel=rawtunnel;
+		bool speakprotocol=true;
 		while(true)
 		{
 			unsigned char byte=0;
@@ -58,11 +85,35 @@ static void*_oLoop(void*rawtunnel)
 			}
 			else
 			{
-				Log(LOGT_TUNNEL,LOGL_DUMP,"<-- 0x%02x",byte);
 				if(write(tunnel->client,&byte,1)!=1)
 				{
 					Log(LOGT_TUNNEL,LOGL_WARNING,"Cannot send to client!");
 					goto die;
+				}
+				
+				if(!speakprotocol)
+				{
+					Log(LOGT_TUNNEL,LOGL_DUMP,"<-- 0x%02x",byte);
+				}
+				else
+				{
+					opcode op=byte;
+					switch(op)
+					{
+						case OPC_LOGIN:
+							readscLogin(tunnel->server,tunnel->client);
+							break;
+						case OPC_PING:
+							readscPing(tunnel->server,tunnel->client);
+							break;
+						case OPC_UPDATE:
+							readscUpdate(tunnel->server,tunnel->client);
+							break;
+						default:
+							Log(LOGT_TUNNEL,LOGL_RESULT,"\n;; Server goes unparsed from here ;;\n> 0x%02x",byte);
+							speakprotocol=false;
+							break;
+					}
 				}
 			}
 		}

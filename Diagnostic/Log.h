@@ -10,7 +10,7 @@ typedef enum
 	// something bad happened, but the program may just survive this. The operator should probably look into this and try and correct it before the next run or iteration.
 	LOGL_WARNING,
 	// If the program is specifically requested to log something (say for example, --help or --version output) this level will make sure it is not muted.
-	LOGL_RESULTS,
+	LOGL_RESULT,
 	// The operator will probably want to know about this.
 	LOGL_NOTICE,
 	// Something happened within the system, there is nothing you can or need to do about this.

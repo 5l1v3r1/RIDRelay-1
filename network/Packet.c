@@ -13,144 +13,83 @@
 
 #include "../Diagnostic/Log.h"
 
-struct iGraph*readGraph(const int source)
+static uint8_t readByte(const int source,const int destination)
 {
-	struct iGraph u=
-	{
-		.base={.op=OPC_UNDEFINED,},
-		.name=NULL,
-	},*p=malloc(sizeof(struct iGraph));
-
-	uint32_t requestsize=0;
-	size_t wanted;
-	ssize_t expected;
-	char*sensor;
-	unsigned int i;
-
-	if(!p)return NULL;
-	memcpy(p,&u,sizeof*p);
-
-	wanted=sizeof(int);
-	expected=(ssize_t)wanted;
-	if(recv(source, &requestsize, wanted,MSG_WAITALL)!=expected)
-	{
-		return p;
-	}
-	// only needed for int sizes
-	requestsize=ntohl(requestsize);
-	if(requestsize<1)
-	{
-		return p;
-	}
-
-	wanted=(sizeof(char)*requestsize);
-	expected=(ssize_t)wanted;
-	sensor=malloc(wanted+sizeof(char));
-	if(!sensor)return NULL;
-	for(i=(unsigned int)wanted+1;--i;)
-	{
-		sensor[i]=0;
-	}
-	if(recv(source, sensor, wanted,MSG_WAITALL)!=expected)
-	{
-		return p;
-	}
-
-	p->base.op=OPC_GRAPH;
-	p->name=sensor;
-	return p;
+	uint8_t i=0;
+	(void)recv(source, &i, sizeof(uint8_t),MSG_WAITALL);
+	(void)write(destination, &i, sizeof(uint8_t));
+	return i;
 }
 
-struct iBounds*readBounds(const int source)
+static uint32_t readInt(const int source,const int destination)
 {
-	struct iBounds b=
-	{
-		.base={.op=OPC_UNDEFINED,},
-		.name=NULL,
-		.lbound=INT_MIN,
-		.ubound=INT_MAX,
-	},*p=malloc(sizeof*p);
-	size_t wanted;
-	uint32_t namelen,lbound,ubound;
-	char*sensor;
-
-	if(!p)return NULL;
-	memcpy(p,&b,sizeof*p);
-
-	wanted=sizeof(int);
-	if(recv(source,&namelen,wanted,MSG_WAITALL)==-1)
-	{
-		return p;
-	}
-	namelen=ntohl(namelen);
-
-	if(namelen<1)
-	{
-		return p;
-	}
-
-	wanted=sizeof(char)*namelen;
-	sensor=malloc(wanted+sizeof(char));
-	if(!sensor)
-	{
-		free(p);
-		return NULL;
-	}
-	{unsigned int i;for(i=(unsigned int)wanted+1;--i;)
-	{
-		sensor[i]=0;
-	}}
-
-	if(recv(source,sensor,wanted,MSG_WAITALL)==-1)
-	{
-		return p;
-	}
-
-	wanted=sizeof(int);
-	if(recv(source,&lbound,wanted,MSG_WAITALL)==-1)
-	{
-		return p;
-	}
-	lbound=ntohl(lbound);
-	if(recv(source,&ubound,wanted,MSG_WAITALL)==-1)
-	{
-		return p;
-	}
-	ubound=ntohl(ubound);
-
-	p->base.op=OPC_BOUNDS;
-	p->name=sensor;
-	p->lbound=(int)lbound;
-	p->ubound=(int)ubound;
-	return p;
+	uint32_t i=0;
+	(void)recv(source, &i, sizeof(uint32_t),MSG_WAITALL);
+	(void)write(destination, &i, sizeof(uint32_t));
+	// uncomment if in netbyteorder instead of hostbyteorder
+	i=ntohl(i);
+	return i;
 }
 
-void destroyLogin(struct LoginPacket*l)
+void readcsPing(const int client, const int server)
 {
-	free(l);
+	(void)client;
+	(void)server;
+	Log(LOGT_TUNNEL,LOGL_RESULT,"\n> 0x%02x ; PONG",OPC_PING);
 }
 
-void destroyUpdate(struct Update*u)
+void readcsUpdate(const int client, const int server)
 {
-	free(u->sensors);
-	u->sensors=NULL;
-	free(u);
-	u=NULL;
+	(void)client;
+	(void)server;
+	Log(LOGT_TUNNEL,LOGL_RESULT,"\n> 0x%02x ; update request",OPC_UPDATE);
 }
 
-void destroyiGraph(struct iGraph*g)
+void readcsGraph(const int client, const int server)
 {
-	free(g->name);
-	g->name=NULL;
-	free(g);
-	g=NULL;
+	uint32_t x;
+	Log(LOGT_TUNNEL,LOGL_RESULT,"\n> 0x%02x ; graph request",OPC_GRAPH);
+	x=readInt(client,server);
+	Log(LOGT_TUNNEL,LOGL_RESULT,"\t0x%08x ; name length: %d",x,x);
+	while(x-->0)
+	{
+		uint8_t c=readByte(client,server);
+		Log(LOGT_TUNNEL,LOGL_RESULT,"\t0x%08x ; '%c'",c,c);
+	}
 }
 
-void destroyiBounds(struct iBounds*b)
+void readscLogin(const int server, const int client)
 {
-	free(b->name);
-	b->name=NULL;
-	free(b);
-	b=NULL;
+	int x;
+	Log(LOGT_TUNNEL,LOGL_RESULT,"\n< 0x%02x ; opcode: Login",OPC_LOGIN);
+	x=readInt(server,client);
+	Log(LOGT_TUNNEL,LOGL_RESULT,"\t0x%08x ; protocol version: %d",x,x);
+}
+
+void readscPing(const int server, const int client)
+{
+	(void)client;
+	(void)server;
+	Log(LOGT_TUNNEL,LOGL_RESULT,"\n< 0x%02x ; PING",OPC_PING);
+}
+
+void readscUpdate(const int server,const int client)
+{
+	int x;
+	Log(LOGT_TUNNEL,LOGL_RESULT,"\n< 0x%02x ; opcode: Update",OPC_UPDATE);
+	Log(LOGT_TUNNEL,LOGL_RESULT,"\t0x%08x ; unittype",readInt(server,client));
+	x=readInt(server,client);
+	Log(LOGT_TUNNEL,LOGL_RESULT,"\t0x%08x ; amount of sensors: %d",x,x);
+	while(x-->0)
+	{
+		Log(LOGT_TUNNEL,LOGL_RESULT,"\t\t0x%08x",readInt(server,client));
+	}
+
+}
+
+void readscGraph(const int server,const int client)
+{
+	Log(LOGT_TUNNEL,LOGL_RESULT,"\n<0x%02x ; opcode: Graph",OPC_GRAPH);
+	// etc...
 }
 
