@@ -87,9 +87,13 @@ void readscUpdate(const int server,const int client)
 
 }
 
+//Aspected pakket: [opcode][sensorcount][valuecount], Source: - Specification Software @ google drive
+//Client can only ask one sensor stats at a time, so is sensorcount still proficient? 
 void readscGraph(const int server,const int client)
 {
 	Log(LOGT_TUNNEL,LOGL_RESULT,"\n<0x%02x ; opcode: Graph",OPC_GRAPH);
-	// etc...
+	Log(LOGT_TUNNEL,LOGL_RESULT,"\t0x%08x ; sensornum", readInt(server, client));
+	Log(LOGT_TUNNEL,LOGL_RESULT,"\t0x%08x ; sensorvalue", readInt(server, client));
+	
 }
 
