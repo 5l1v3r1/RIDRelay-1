@@ -38,6 +38,17 @@ static void*_iLoop(void*rawtunnel)
 				}
 				else
 				{
+					#ifdef RELAY_USE_DISPATCHER
+					if(csreader[byte]==NULL)
+					{
+						Log(LOGT_TUNNEL,LOGL_RESULT,"\n;; Client goes unparsed from here ;;\n> 0x%02x",byte);
+						speakprotocol=false;
+					}
+					else
+					{
+						(csreader[byte])(tunnel->client,tunnel->server);
+					}
+					#else
 					opcode op=byte;
 					switch(op)
 					{
@@ -56,6 +67,7 @@ static void*_iLoop(void*rawtunnel)
 							speakprotocol=false;
 							break;
 					}
+					#endif
 				}
 			}
 		}
