@@ -21,7 +21,7 @@ void(*const csreader[OPC__MAXOPCODE+1])(const int,const int)=
 	&readcsUpdate,
 	&readcsGraph,
 	&readcsAlarm,
-	NULL,
+	&readcsSetBounds,
 	NULL,
 },(*const screader[OPC__MAXOPCODE+1])(const int,const int)=
 {
@@ -147,3 +147,19 @@ void readcsAlarm(const int client, const int server)
 	}
 }
 
+void readcsSetBounds(const int client, const int server)
+{
+	int x, min, max;
+	Log(LOGT_TUNNEL,LOGL_RESULT,"\n> 0x%02x ; opcode: Bounds",OPC_BOUNDS);
+	x=(int)readInt(client, server);
+	Log(LOGT_TUNNEL,LOGL_RESULT,"\t0x%08x ; namelength: %d", x,x);
+	
+	while(x-->0)
+	{
+		Log(LOGT_TUNNEL,LOGL_RESULT,"\t0x%08x ; name", readByte(client, server));
+	}
+	min=(int)readInt(client, server);
+	max=(int)readInt(client, server);
+	Log(LOGT_TUNNEL,LOGL_RESULT,"\t0x%08x ; setmin: %d", min, min);
+	Log(LOGT_TUNNEL,LOGL_RESULT,"\t0x%08x ; setmax: %d", max, max);
+}
