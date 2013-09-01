@@ -29,6 +29,7 @@ extern void readcsPing(const int, const int);
 extern void readcsUpdate(const int, const int);
 extern void readcsGraph(const int, const int);
 extern void readcsAlarm(const int,const int);
+extern void readcsSetBounds(const int, const int);
 
 extern void readscLogin(const int, const int);
 extern void readscPing(const int, const int);
