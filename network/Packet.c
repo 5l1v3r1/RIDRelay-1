@@ -20,7 +20,7 @@ void(*const csreader[OPC__MAXOPCODE+1])(const int,const int)=
 	&readcsPing,
 	&readcsUpdate,
 	&readcsGraph,
-	NULL,
+	&readcsAlarm,
 	NULL,
 	NULL,
 },(*const screader[OPC__MAXOPCODE+1])(const int,const int)=
@@ -130,5 +130,18 @@ void readscAlarm(const int server,const int client)
 	Log(LOGT_TUNNEL,LOGL_RESULT,"\t0x%08x ; current sensor value", readInt(server,client));
 	Log(LOGT_TUNNEL,LOGL_RESULT,"\t0x%08x ; counteraction code",readInt(server,client));
 	Log(LOGT_TUNNEL,LOGL_RESULT,"\t0x%08x ; sensor number",readInt(server,client));
+}
+
+void readcsAlarm(const int client, const int server)
+{
+	int x;
+	Log(LOGT_TUNNEL,LOGL_RESULT,"\n> 0x%02x ; opcode: Alarm",OPC_ALARM);
+	x=(int)readInt(client, server);
+	Log(LOGT_TUNNEL,LOGL_RESULT,"\t0x%08x ; namelength: %d", x,x);
+	
+	while(x-->0)
+	{
+		Log(LOGT_TUNNEL,LOGL_RESULT,"\t0x%08x ; name", readByte(client, server));
+	}
 }
 

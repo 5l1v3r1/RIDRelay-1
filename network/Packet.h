@@ -25,49 +25,10 @@ typedef struct
 typedef Packet scPacket;
 typedef Packet csPacket;
 
-struct csPing{csPacket base;};
-struct scPing{scPacket base;};
-
-struct csUpdate{csPacket base;};
-
-struct scUpdate
-{
-	scPacket base;
-	unittype type;
-	unsigned int sensorcount;
-	int*sensors;
-};
-
-struct csGraph
-{
-	csPacket base;
-	unsigned int namelen;
-	char*name;
-};
-
-struct scGraph
-{
-	scPacket base;
-};
-
-struct iBounds
-{
-	Packet base;
-	char*name;
-	int lbound,ubound;
-};
-
-struct Update
-{
-	Packet base;
-	unittype unit;
-	int sensorlen;
-	int*sensors;
-};
-
 extern void readcsPing(const int, const int);
 extern void readcsUpdate(const int, const int);
 extern void readcsGraph(const int, const int);
+extern void readcsAlarm(const int,const int);
 
 extern void readscLogin(const int, const int);
 extern void readscPing(const int, const int);
