@@ -1,20 +1,10 @@
 #ifndef RPACKET_H
 #define RPACKET_H
 
-#include <stdlib.h>
-#include <string.h>
-#include <limits.h>
-#ifdef _WIN32
-	#include <windows.h>
-#else
-	#include <sys/socket.h>
-	#include <netinet/in.h>
-	#include <unistd.h>
-#endif
 
 typedef enum opcode
 {
-	OPC_UNDEFINED=0x00,
+	OPC__UNDEFINED=0x00,
 	OPC_LOGIN,
 	OPC_PING,
 	OPC_UPDATE,
@@ -22,6 +12,7 @@ typedef enum opcode
 	OPC_ALARM,
 	OPC_BOUNDS,
 	OPC_VALUE,
+	#define OPC__MAXOPCODE OPC_VALUE
 } opcode;
 
 typedef enum{unit_undefined,unit_temperature,unit_flow,unit_pressure,unit_fullness,unit_radiation} unittype;
@@ -82,7 +73,11 @@ extern void readscLogin(const int, const int);
 extern void readscPing(const int, const int);
 extern void readscUpdate(const int,const int);
 extern void readscGraph(const int, const int);
+extern void readscAlarm(const int, const int);
 
+extern void
+(*const csreader[OPC__MAXOPCODE+1])(const int,const int),
+(*const screader[OPC__MAXOPCODE+1])(const int,const int);
 
 #endif
 

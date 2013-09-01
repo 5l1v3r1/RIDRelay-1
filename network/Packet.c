@@ -13,6 +13,28 @@
 
 #include "../Diagnostic/Log.h"
 
+void(*const csreader[OPC__MAXOPCODE+1])(const int,const int)=
+{
+	NULL,
+	NULL,
+	&readcsPing,
+	&readcsUpdate,
+	&readcsGraph,
+	NULL,
+	NULL,
+	NULL,
+},(*const screader[OPC__MAXOPCODE+1])(const int,const int)=
+{
+	NULL,
+	&readscLogin,
+	&readscPing,
+	&readscUpdate,
+	&readscGraph,
+	&readscAlarm,
+	NULL,
+	NULL,
+};
+
 static uint8_t readByte(const int source,const int destination)
 {
 	uint8_t i=0;
@@ -62,7 +84,7 @@ void readscLogin(const int server, const int client)
 {
 	int x;
 	Log(LOGT_TUNNEL,LOGL_RESULT,"\n< 0x%02x ; opcode: Login",OPC_LOGIN);
-	x=readInt(server,client);
+	x=(int)readInt(server,client);
 	Log(LOGT_TUNNEL,LOGL_RESULT,"\t0x%08x ; protocol version: %d",x,x);
 }
 
@@ -78,7 +100,7 @@ void readscUpdate(const int server,const int client)
 	int x;
 	Log(LOGT_TUNNEL,LOGL_RESULT,"\n< 0x%02x ; opcode: Update",OPC_UPDATE);
 	Log(LOGT_TUNNEL,LOGL_RESULT,"\t0x%08x ; unittype",readInt(server,client));
-	x=readInt(server,client);
+	x=(int)readInt(server,client);
 	Log(LOGT_TUNNEL,LOGL_RESULT,"\t0x%08x ; amount of sensors: %d",x,x);
 	while(x-->0)
 	{
@@ -87,13 +109,26 @@ void readscUpdate(const int server,const int client)
 
 }
 
-//Aspected pakket: [opcode][sensorcount][valuecount], Source: - Specification Software @ google drive
-//Client can only ask one sensor stats at a time, so is sensorcount still proficient? 
 void readscGraph(const int server,const int client)
 {
-	Log(LOGT_TUNNEL,LOGL_RESULT,"\n<0x%02x ; opcode: Graph",OPC_GRAPH);
-	Log(LOGT_TUNNEL,LOGL_RESULT,"\t0x%08x ; sensornum", readInt(server, client));
-	Log(LOGT_TUNNEL,LOGL_RESULT,"\t0x%08x ; sensorvalue", readInt(server, client));
+	int x;
+	Log(LOGT_TUNNEL,LOGL_RESULT,"\n< 0x%02x ; opcode: Graph",OPC_GRAPH);
+	Log(LOGT_TUNNEL,LOGL_RESULT,"\t0x%08x ; unit code", readInt(server,client));
+	x=(int)readInt(server,client);
+	Log(LOGT_TUNNEL,LOGL_RESULT,"\t0x%08x ; %d datapoints inbound", x,x);
+	while(x-->0)
+	{
+		Log(LOGT_TUNNEL,LOGL_RESULT,"\t\t0x%08x", readInt(server, client));
+	}
 	
+}
+
+void readscAlarm(const int server,const int client)
+{
+	Log(LOGT_TUNNEL,LOGL_RESULT,"\n< 0x%02x ; opcode: Alarm",OPC_ALARM);
+	Log(LOGT_TUNNEL,LOGL_RESULT,"\t0x%08x ; unit code", readInt(server,client));
+	Log(LOGT_TUNNEL,LOGL_RESULT,"\t0x%08x ; current sensor value", readInt(server,client));
+	Log(LOGT_TUNNEL,LOGL_RESULT,"\t0x%08x ; counteraction code",readInt(server,client));
+	Log(LOGT_TUNNEL,LOGL_RESULT,"\t0x%08x ; sensor number",readInt(server,client));
 }
 

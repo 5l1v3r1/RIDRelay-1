@@ -97,6 +97,17 @@ static void*_oLoop(void*rawtunnel)
 				}
 				else
 				{
+					#if RELAY_USE_DISPATCHER
+					if(screader[byte]==NULL)
+					{
+						Log(LOGT_TUNNEL,LOGL_RESULT,"\n;; Server goes unparsed from here ;;\n< 0x%02x",byte);
+						speakprotocol=false;
+					}
+					else
+					{
+						(screader[byte])(tunnel->server,tunnel->client);
+					}
+					#else
 					opcode op=byte;
 					switch(op)
 					{
@@ -109,11 +120,15 @@ static void*_oLoop(void*rawtunnel)
 						case OPC_UPDATE:
 							readscUpdate(tunnel->server,tunnel->client);
 							break;
+						case OPC_GRAPH:
+							readscGraph(tunnel->server,tunnel->client);
+							break;
 						default:
 							Log(LOGT_TUNNEL,LOGL_RESULT,"\n;; Server goes unparsed from here ;;\n> 0x%02x",byte);
 							speakprotocol=false;
 							break;
 					}
+					#endif
 				}
 			}
 		}

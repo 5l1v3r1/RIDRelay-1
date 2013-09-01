@@ -1,7 +1,7 @@
 CC = gcc
 
-CFLAGS = -pipe -Wall -Wextra -std=c99 -pedantic-errors -Werror -O3
-CFLAGS = -pipe -Wall -Wextra -std=c99 -pedantic -g
+CFLAGS = -pipe -Wall -Wextra -std=c99 -pedantic-errors -Werror -O3 -DRELAY_USE_DISPATCHER
+CFLAGS = -pipe -Wall -Wextra -std=c99 -pedantic -g -DRELAY_USE_DISPATCHER
 
 
 #bundled iniparser

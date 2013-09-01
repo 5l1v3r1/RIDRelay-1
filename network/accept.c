@@ -7,7 +7,7 @@
 struct link
 {
 	const int relay_sockfd;
-	struct sockaddr_in const*const server_addr;
+	struct sockaddr const*const server_addr;
 };
 
 static void*socklisten(void*connection)
@@ -165,7 +165,7 @@ pthread_t AcceptClients(void)
 			struct link tlink=
 			{
 				.relay_sockfd=relay_sockfd,
-				.server_addr=ptservaddr,
+				.server_addr=(struct sockaddr*)ptservaddr,
 			},*ptlink=malloc(sizeof*ptlink);
 
 			if(ptlink==NULL)
